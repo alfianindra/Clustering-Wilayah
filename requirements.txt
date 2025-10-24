@@ -1,0 +1,11 @@
+streamlit
+pandas
+numpy
+folium
+seaborn
+matplotlib
+scikit-learn
+chromedriver-autoinstaller
+selenium
+Pillow
+openpyxl
