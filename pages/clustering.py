@@ -19,6 +19,9 @@ from style import load_custom_style
 import tempfile
 import os
 
+# ============================
+# KONFIGURASI HALAMAN
+# ============================
 st.set_page_config(
     page_title="Clustering Wilayah di Indonesia",
     layout="wide",
@@ -27,8 +30,6 @@ st.set_page_config(
 
 load_custom_style()
 
-# Config Halaman
-st.set_page_config(layout="wide")
 st.markdown("<h1 style='text-align: center;'>Clustering Gizi di Indonesia</h1>", unsafe_allow_html=True)
 st.write("""Aplikasi ini melakukan **Clustering Data Gizi** menggunakan algoritma **K-Means**, **K-Median**, dan **CLARA**.""")
 st.markdown(
@@ -44,11 +45,15 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Upload Dataset
+# ============================
+# UNGGAH DATASET
+# ============================
 dataset = st.file_uploader("📂 Unggah Dataset", type=["xlsx", "csv"])
 st.markdown("---")
 
-# Pilih parameter cluster
+# ============================
+# PARAMETER CLUSTER
+# ============================
 st.subheader("⚙️ Pilih Parameter Clustering")
 metode_opsi = [
     "K-Means",
@@ -64,7 +69,9 @@ st.markdown("---")
 if "hasil_clustering" not in st.session_state:
     st.session_state.hasil_clustering = None
 
-# Validasi data
+# ============================
+# VALIDASI KOLUMNYA
+# ============================
 def validasi_kolom(df):
     required_cols = ["Kabupaten", "Latitude", "Longitude"]
     for year in range(2018, 2024):
@@ -78,7 +85,9 @@ def validasi_kolom(df):
         return False
     return True
 
-# Set Legend
+# ============================
+# LEGEND UNTUK PETA
+# ============================
 def tentukan_legend_type(pilihan_variabel):
     tahun = "2018"
     variabel_utama = [
@@ -100,7 +109,9 @@ def tentukan_legend_type(pilihan_variabel):
     else:
         return "rendah_tinggi"
 
-# Peta dengan folium
+# ============================
+# TAMPILKAN PETA FOLIUM
+# ============================
 def tampilkan_peta(df, cluster_col, k, numeric_cols, legend_mode, judul="Peta Hasil Clustering", metode_nama=""):
     if legend_mode == "auto":
         legend_mode = tentukan_legend_type(numeric_cols)
@@ -122,7 +133,7 @@ def tampilkan_peta(df, cluster_col, k, numeric_cols, legend_mode, judul="Peta Ha
         ).add_to(m)
 
     try:
-        m.fit_bounds(m.get_bounds())  # ✅ agar peta tampil penuh
+        m.fit_bounds(m.get_bounds())  
     except Exception:
         pass
 
@@ -146,16 +157,14 @@ def tampilkan_peta(df, cluster_col, k, numeric_cols, legend_mode, judul="Peta Ha
         }
 
     labels_for_k = gizi_dict.get(k, [f"Cluster {i}" for i in range(k)])
-    legend_items = ""
-    for i in range(k):
-        deskripsi = labels_for_k[i] if i < len(labels_for_k) else f"Cluster {i}"
-        legend_items += f"""
-        <div style='margin-bottom:5px'>
-            <span style='display:inline-block;width:15px;height:15px;background-color:{colors[i]};
-            border:1px solid #000;margin-right:6px;vertical-align:middle;'></span>
-            <span style='vertical-align:middle;'>Cluster {i}: {deskripsi}</span>
-        </div>
-        """
+    legend_items = "".join(
+        f"<div style='margin-bottom:5px'>"
+        f"<span style='display:inline-block;width:15px;height:15px;background-color:{colors[i]};"
+        f"border:1px solid #000;margin-right:6px;vertical-align:middle;'></span>"
+        f"<span style='vertical-align:middle;'>Cluster {i}: {labels_for_k[i]}</span></div>"
+        for i in range(k)
+    )
+
     legend_html = f"""
     <div style="position: fixed; bottom: 30px; left: 30px; width: 260px; background-color: white;
     border:1px solid grey; border-radius:8px; z-index:9999; font-size:13px; padding: 10px;
@@ -163,13 +172,13 @@ def tampilkan_peta(df, cluster_col, k, numeric_cols, legend_mode, judul="Peta Ha
         <b>Keterangan Cluster</b><br> {legend_items}
     </div>"""
     m.get_root().html.add_child(folium.Element(legend_html))
-
     html(m.get_root().render(), height=720, width="100%")
     return m
 
-# Selenium
+# ============================
+# FUNGSI SCREENSHOT PETA
+# ============================
 def Peta_ke_png(m):
-
     tmp_dir = tempfile.mkdtemp()
     html_path = os.path.join(tmp_dir, "map_temp.html")
     png_path = os.path.join(tmp_dir, "map_screenshot.png")
@@ -184,7 +193,7 @@ def Peta_ke_png(m):
 
     driver = webdriver.Chrome(options=chrome_options)
     driver.get("file://" + html_path)
-    time.sleep(3)  # tunggu tile selesai render
+    time.sleep(3)
     driver.save_screenshot(png_path)
     driver.quit()
 
@@ -192,7 +201,9 @@ def Peta_ke_png(m):
         img_bytes = f.read()
     return img_bytes
 
-# Error Handling
+# ============================
+# PROSES DATASET
+# ============================
 if dataset is not None:
     try:
         df = pd.read_csv(dataset) if dataset.name.endswith(".csv") else pd.read_excel(dataset)
@@ -217,46 +228,53 @@ if dataset is not None:
                                       default=numeric_cols_all if pilih_semua else [])
     st.markdown("---")
 
-# ANALISIS KORELASI 
+    # ============================
+    # 🔗 ANALISIS KORELASI
+    # ============================
     if pilihan_variabel:
         st.subheader("🔗 Analisis Korelasi antar Variabel Terpilih")
 
         try:
-            # Gunakan hanya variabel tahun 2018
-            tahun_target = "2018"
-            variabel_2018 = [v for v in pilihan_variabel if tahun_target in v]
+            tahun_ditemukan = sorted(
+                {v.split()[-1] for v in pilihan_variabel if v.split()[-1].isdigit()}
+            )
 
-            if not variabel_2018:
-                st.info("Tidak ada variabel tahun 2018 yang dipilih untuk analisis korelasi.")
+            if len(tahun_ditemukan) == 1:
+                # Kalau hanya 1 tahun dipilih
+                tahun_target = tahun_ditemukan[0]
             else:
-                # Buat nama kolom tanpa tahun untuk ditampilkan di heatmap
-                rename_map = {v: v.replace(f" {tahun_target}", "") for v in variabel_2018}
-                df_2018 = df[variabel_2018].rename(columns=rename_map)
+                # Kalau lebih dari 1 tahun atau semua tahun → tampilkan salah satu (2018)
+                tahun_target = "2018"
 
-                corr = df_2018.corr(method="pearson")
+            variabel_tahun = [v for v in pilihan_variabel if tahun_target in v]
 
+            if not variabel_tahun:
+                st.info(f"Tidak ada variabel tahun {tahun_target} yang dipilih untuk analisis korelasi.")
+            else:
+                rename_map = {v: v.replace(f" {tahun_target}", "") for v in variabel_tahun}
+                df_tahun = df[variabel_tahun].rename(columns=rename_map)
+
+                corr = df_tahun.corr(method="pearson")
                 fig, ax = plt.subplots(figsize=(8, 5))
                 sns.heatmap(corr, annot=True, cmap="coolwarm", center=0, fmt=".2f", linewidths=0.5, ax=ax)
-                ax.set_title("Matriks Korelasi Variabel (Data Tahun 2018)", fontsize=11, pad=10)
+                ax.set_title(f"Matriks Korelasi Variabel (Data Tahun {tahun_target})", fontsize=11, pad=10)
                 plt.tight_layout()
                 st.pyplot(fig)
 
-                # Tombol download korelasi
                 buf_corr = BytesIO()
                 fig.savefig(buf_corr, format="png", bbox_inches="tight")
                 buf_corr.seek(0)
                 st.download_button(
-                    label="📥 Download Heatmap Korelasi (PNG)",
+                    label=f"📥 Download Heatmap Korelasi Tahun {tahun_target} (PNG)",
                     data=buf_corr,
-                    file_name="heatmap_korelasi_2018.png",
+                    file_name=f"heatmap_korelasi_{tahun_target}.png",
                     mime="image/png",
-                    key="download_corr_heatmap"
+                    key=f"download_corr_heatmap_{tahun_target}"
                 )
         except Exception as e:
             st.warning(f"Tidak dapat menghitung korelasi: {e}")
 
     # Tombol Proses clustering
-
     if st.button("🚀 Lakukan Clustering"):
         if metode not in metode_opsi or jumlah_cluster is None:
             st.warning("⚠️ Pilih metode dan jumlah cluster!")
