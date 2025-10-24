@@ -13,6 +13,7 @@ def load_custom_style():
         min-width: 300px !important;
         background: var(--sidebar-bg, linear-gradient(180deg, #1f1f1f 0%, #2b2b2b 100%)) !important;
         color: var(--sidebar-text, #e0e0e0) !important;
+        transition: all 0.3s ease-in-out !important;
     }
 
     [data-testid="stSidebarNav"] li a {
@@ -106,6 +107,35 @@ def load_custom_style():
             --card-bg: #2e2e2e;
             --card-text: #ffffff;
         }
+    }
+
+    [data-testid="stSidebar"] {
+        transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out !important;
+    }
+
+    /* Saat sidebar collapse, geser keluar tapi tetap bisa diakses tombol togglenya */
+    [data-testid="stSidebar"][aria-expanded="false"] {
+        transform: translateX(-320px) !important;  /* keluar layar kiri */
+        opacity: 0 !important;
+        pointer-events: none; /* supaya klik tidak kena sidebar tak terlihat */
+    }
+
+    /* Saat sidebar terbuka */
+    [data-testid="stSidebar"][aria-expanded="true"] {
+        transform: translateX(0) !important;
+        opacity: 1 !important;
+        pointer-events: auto;
+    }
+
+    /* Pastikan toggle button tetap muncul */
+    [data-testid="collapsedControl"] {
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        z-index: 9999 !important;
+        position: fixed !important;
+        left: 10px !important;
+        top: 10px !important;
     }
     </style>
     """
