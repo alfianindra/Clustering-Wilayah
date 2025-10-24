@@ -463,7 +463,6 @@ if st.session_state.hasil_clustering:
                 df_tren = df.groupby("Cluster")[kolom_tahun_sorted].mean().T
                 df_tren.index = [int(c.split()[-1]) for c in kolom_tahun_sorted]
 
-                # Buat fig untuk tiap variabel tahunan
                 fig, ax = plt.subplots(figsize=(3.8, 2.4))
                 for c in df_tren.columns:
                     ax.plot(df_tren.index, df_tren[c], marker="o", label=f"Cluster {c}")
@@ -472,7 +471,6 @@ if st.session_state.hasil_clustering:
                 ax.set_xlabel("Tahun", fontsize=8)
                 ax.set_ylabel("Rata-rata", fontsize=8)
 
-                # 🔧 Perbaikan legend supaya tidak menutupi grafik
                 box = ax.get_position()
                 ax.set_position([box.x0, box.y0, box.width * 0.80, box.height])  # sisakan ruang kanan 20%
                 ax.legend(fontsize=6, loc='center left', bbox_to_anchor=(1.02, 0.5), frameon=False)
@@ -512,11 +510,9 @@ if st.session_state.hasil_clustering:
 
             return all_buffers, buf_tren
 
-        # Membuat Static agar tidak flicker
         all_trends, buf_tren = generate_trends_static(df, numeric_cols)
 
         if all_trends:
-            # render semua sekaligus ke container 
             st.markdown("#### 🔹 Visualisasi Tren per Variabel")
             cols_trend_layout = st.columns(3)
             for i, buf in enumerate(all_trends):
@@ -555,7 +551,6 @@ if st.session_state.hasil_clustering:
 
                 kolom_tahun_sorted = sorted(kolom_tahun, key=lambda x: int(x.split()[-1]))
 
-                # Ambil 10 wilayah dengan rata-rata tertinggi
                 df['mean_base'] = df[kolom_tahun_sorted].mean(axis=1)
                 df_top10 = df.nlargest(10, 'mean_base')
                 df_top10 = df_top10[["Kabupaten"] + kolom_tahun_sorted].set_index("Kabupaten")
@@ -628,10 +623,80 @@ if st.session_state.hasil_clustering:
             )
         else:
             st.info("Tidak ada variabel tahunan untuk ditampilkan pada tren 10 wilayah teratas.")
+        # Grafik nilai silhouette per cluster
+        st.markdown("### 📈 Silhouette Plot per Cluster")
+
+        try:
+            from sklearn.metrics import silhouette_samples, silhouette_score
+            from matplotlib import cm
+
+            data_matriks = df_scaled[numeric_cols].values
+            label_cluster = labels
+            algo = metode_nama
+
+            nilai_sample = silhouette_samples(data_matriks, label_cluster)
+            nilai_rata   = silhouette_score(data_matriks, label_cluster)
+
+            n_clusters = len(np.unique(label_cluster))
+            y_bawah = 5
+
+            fig, ax1 = plt.subplots(figsize=(5, 3.5))
+
+            for i in range(n_clusters):
+                nilai_i = nilai_sample[label_cluster == i]
+                nilai_i.sort()
+
+                ukuran_i = nilai_i.shape[0]
+                y_atas = y_bawah + ukuran_i
+
+                warna = cm.nipy_spectral(float(i) / n_clusters)
+                ax1.fill_betweenx(
+                    np.arange(y_bawah, y_atas),
+                    0,
+                    nilai_i,
+                    facecolor=warna,
+                    edgecolor=warna,
+                    alpha=0.7
+                )
+
+                ax1.text(
+                    -0.25, 
+                    y_bawah + 0.5 * ukuran_i,
+                    str(i),
+                    fontsize=9,
+                    va='center',
+                    ha='right'
+                )
+                y_bawah = y_atas + 5
+
+            ax1.axvline(x=nilai_rata, color="red", linestyle="--", linewidth=1)
+
+            ax1.set_yticks([])  
+            ax1.set_xlim([-0.3, 1])  
+            ax1.set_title(f"Plot Silhouette ({algo})", fontsize=10, pad=8)
+            ax1.set_xlabel("Nilai Silhouette Coefficient", fontsize=9)
+            ax1.set_ylabel("Cluster", fontsize=9)
+            plt.tight_layout(pad=0.8)
+
+            st.pyplot(fig)
+
+            # Tombol download
+            buf_sil = BytesIO()
+            fig.savefig(buf_sil, format="png", bbox_inches="tight", dpi=150)
+            buf_sil.seek(0)
+            st.download_button(
+                label=f"📥 Download Grafik Silhouette ({algo})",
+                data=buf_sil,
+                file_name=f"silhouette_plot_{algo.lower()}.png",
+                mime="image/png",
+                key=f"download_silhouette_{algo}"
+            )
+
+        except Exception as e:
+            st.warning(f"⚠️ Gagal membuat grafik silhouette: {e}")
 
         # METRIK  
         col1, col2, col3 = st.columns(3)
-        # tampilan metrik
         silh = result.get(metode_nama, {}).get("silhouette", None)
         dbi = result.get(metode_nama, {}).get("dbi", None)
         waktu = result.get("waktu", None)
