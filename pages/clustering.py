@@ -404,7 +404,7 @@ if st.session_state.hasil_clustering:
                 st.image(buf, use_container_width=True)
 
         st.download_button(
-            label=f"📥 Download Semua Boxplot ({metode_nama}) (PNG)",
+            label=f"📥 Download Semua Boxplot ({metode_nama})",
             data=buf_all,
             file_name=f"boxplot_{metode_nama.lower()}.png",
             mime="image/png",
@@ -440,7 +440,7 @@ if st.session_state.hasil_clustering:
                 st.error(f"⚠️ Gagal menyiapkan tombol unduh: {e}")
 
         # TREN VARIABEL  
-        st.markdown("### 📈 Tren Variabel Tiap Cluster (2018–2023)")
+        st.markdown("### 📈 Tren Variabel Tiap Cluster")
 
         @st.cache_data(show_spinner=False)
         def generate_trends_static(df, numeric_cols, cols_per_row=3):
@@ -467,10 +467,16 @@ if st.session_state.hasil_clustering:
                 fig, ax = plt.subplots(figsize=(3.8, 2.4))
                 for c in df_tren.columns:
                     ax.plot(df_tren.index, df_tren[c], marker="o", label=f"Cluster {c}")
+
                 ax.set_title(base, fontsize=9)
                 ax.set_xlabel("Tahun", fontsize=8)
                 ax.set_ylabel("Rata-rata", fontsize=8)
-                ax.legend(fontsize=6)
+
+                # 🔧 Perbaikan legend supaya tidak menutupi grafik
+                box = ax.get_position()
+                ax.set_position([box.x0, box.y0, box.width * 0.80, box.height])  # sisakan ruang kanan 20%
+                ax.legend(fontsize=6, loc='center left', bbox_to_anchor=(1.02, 0.5), frameon=False)
+
                 ax.tick_params(axis='both', labelsize=8)
                 plt.tight_layout()
 
@@ -518,7 +524,7 @@ if st.session_state.hasil_clustering:
                     st.image(buf, use_container_width=True)
 
             st.download_button(
-                label=f"📥 Download Semua Grafik Tren ({metode_nama}) (PNG)",
+                label=f"📥 Download Semua Grafik Tren ({metode_nama})",
                 data=buf_tren,
                 file_name=f"trend_{metode_nama.lower()}.png",
                 mime="image/png",
@@ -526,6 +532,102 @@ if st.session_state.hasil_clustering:
             )
         else:
             st.info("Tidak ada variabel tahunan (2018–2023) untuk ditampilkan.")
+
+        #TREN 10 WILAYAH TERATAS
+        st.markdown("### Tren Tahunan 10 Wilayah Teratas")
+
+        @st.cache_data(show_spinner=False)
+        def generate_top10_trend(df, numeric_cols):
+            tahun_cols = [str(y) for y in range(2018, 2024)]
+            variabel_tahunan = [v for v in numeric_cols if any(t in v for t in tahun_cols)]
+            all_buffers, imgs = [], []
+
+            if not variabel_tahunan:
+                return [], None
+
+            bases = sorted(set(" ".join(v.split()[:-1]) if v.split()[-1].isdigit() else v for v in variabel_tahunan))
+
+            for base in bases:
+                kolom_tahun = [v for v in variabel_tahunan if (v.startswith(base) or base in v)]
+                kolom_tahun = [v for v in kolom_tahun if v.split()[-1].isdigit()]
+                if not kolom_tahun:
+                    continue
+
+                kolom_tahun_sorted = sorted(kolom_tahun, key=lambda x: int(x.split()[-1]))
+
+                # Ambil 10 wilayah dengan rata-rata tertinggi
+                df['mean_base'] = df[kolom_tahun_sorted].mean(axis=1)
+                df_top10 = df.nlargest(10, 'mean_base')
+                df_top10 = df_top10[["Kabupaten"] + kolom_tahun_sorted].set_index("Kabupaten")
+
+                fig, ax = plt.subplots(figsize=(5, 3))
+                for kab, row in df_top10.iterrows():
+                    ax.plot(
+                        [int(c.split()[-1]) for c in kolom_tahun_sorted],
+                        row.values,
+                        marker="o",
+                        label=kab
+                    )
+
+                ax.set_title(f"{base} (10 Wilayah Teratas)", fontsize=9, fontweight="bold")
+                ax.set_xlabel("Tahun", fontsize=8)
+                ax.set_ylabel("Nilai", fontsize=8)
+                
+                box = ax.get_position()
+                ax.set_position([box.x0, box.y0, box.width * 0.80, box.height])  # sisakan ruang kanan 20%
+                ax.legend(fontsize=6, loc='center left', bbox_to_anchor=(1.02, 0.5), frameon=False)
+
+                ax.tick_params(axis='both', labelsize=8)
+                plt.tight_layout()
+
+
+                buf = BytesIO()
+                fig.savefig(buf, format="png", bbox_inches="tight", dpi=150)
+                buf.seek(0)
+                all_buffers.append(buf)
+                imgs.append(Image.open(buf))
+                plt.close(fig)
+
+            if not imgs:
+                return all_buffers, None
+
+            cols_per_row = 2
+            max_w = max(im.width for im in imgs)
+            max_h = max(im.height for im in imgs)
+            n_rows = (len(imgs) + cols_per_row - 1) // cols_per_row
+            combined_width = cols_per_row * max_w
+            combined_height = n_rows * max_h
+            combined_img = Image.new("RGB", (combined_width, combined_height), (255, 255, 255))
+
+            for idx, im in enumerate(imgs):
+                row = idx // cols_per_row
+                col = idx % cols_per_row
+                combined_img.paste(im, (col * max_w, row * max_h))
+
+            buf_combined = BytesIO()
+            combined_img.save(buf_combined, format="PNG", optimize=True)
+            buf_combined.seek(0)
+
+            return all_buffers, buf_combined
+
+        all_top10, buf_top10 = generate_top10_trend(df, numeric_cols)
+
+        if all_top10:
+            st.markdown("#### 🔹 Visualisasi Tren 10 Wilayah Teratas per Variabel")
+            cols_top_layout = st.columns(2)
+            for i, buf in enumerate(all_top10):
+                with cols_top_layout[i % 2]:
+                    st.image(buf, use_container_width=True)
+
+            st.download_button(
+                label=f"📥 Download Semua Tren 10 Wilayah Teratas ({metode_nama})",
+                data=buf_top10,
+                file_name=f"top10_tren_{metode_nama.lower()}.png",
+                mime="image/png",
+                key=f"download_top10_{metode_nama}"
+            )
+        else:
+            st.info("Tidak ada variabel tahunan untuk ditampilkan pada tren 10 wilayah teratas.")
 
         # METRIK  
         col1, col2, col3 = st.columns(3)
