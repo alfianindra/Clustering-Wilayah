@@ -27,7 +27,7 @@ st.set_page_config(
 
 load_custom_style()
 
-# ====================== KONFIGURASI HALAMAN ======================
+# Config Halaman
 st.set_page_config(layout="wide")
 st.markdown("<h1 style='text-align: center;'>Clustering Gizi di Indonesia</h1>", unsafe_allow_html=True)
 st.write("""Aplikasi ini melakukan **Clustering Data Gizi** menggunakan algoritma **K-Means**, **K-Median**, dan **CLARA**.""")
@@ -44,11 +44,11 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# ====================== UPLOAD DATASET ======================
+# Upload Dataset
 dataset = st.file_uploader("📂 Unggah Dataset", type=["xlsx", "csv"])
 st.markdown("---")
 
-# ====================== PILIH PARAMETER CLUSTERING ======================
+# Pilih parameter cluster
 st.subheader("⚙️ Pilih Parameter Clustering")
 metode_opsi = [
     "K-Means",
@@ -64,7 +64,7 @@ st.markdown("---")
 if "hasil_clustering" not in st.session_state:
     st.session_state.hasil_clustering = None
 
-# ====================== VALIDASI KOLOM DATA ======================
+# Validasi data
 def validasi_kolom(df):
     required_cols = ["Kabupaten", "Latitude", "Longitude"]
     for year in range(2018, 2024):
@@ -78,7 +78,7 @@ def validasi_kolom(df):
         return False
     return True
 
-# ====================== LOGIKA TIPE LEGEND OTOMATIS ======================
+# Set Legend
 def tentukan_legend_type(pilihan_variabel):
     tahun = "2018"
     variabel_utama = [
@@ -100,7 +100,7 @@ def tentukan_legend_type(pilihan_variabel):
     else:
         return "rendah_tinggi"
 
-# ====================== PEMETAAN (INTERACTIVE FOLIUM) ======================
+# Peta dengan folium
 def tampilkan_peta(df, cluster_col, k, numeric_cols, legend_mode, judul="Peta Hasil Clustering", metode_nama=""):
     if legend_mode == "auto":
         legend_mode = tentukan_legend_type(numeric_cols)
@@ -167,7 +167,7 @@ def tampilkan_peta(df, cluster_col, k, numeric_cols, legend_mode, judul="Peta Ha
     html(m.get_root().render(), height=720, width="100%")
     return m
 
-# ====================== SELENIUM SCREENSHOT FUNCTION ======================
+# Selenium
 def Peta_ke_png(m):
 
     tmp_dir = tempfile.mkdtemp()
@@ -411,7 +411,7 @@ if st.session_state.hasil_clustering:
             key=f"download_boxplot_{metode_nama}"
         )
 
-        # ================== PETA (DITAMPILKAN SETELAH BOXPLOT) ==================
+        # PETA 
         m = tampilkan_peta(df, "Cluster", jumlah_cluster, numeric_cols, "auto",
                            f"Peta Hasil Clustering ({metode_nama})", metode_nama)
 
@@ -439,7 +439,7 @@ if st.session_state.hasil_clustering:
             except Exception as e:
                 st.error(f"⚠️ Gagal menyiapkan tombol unduh: {e}")
 
-        # ================== TREN VARIABEL (SETELAH PETA) ==================
+        # TREN VARIABEL  
         st.markdown("### 📈 Tren Variabel Tiap Cluster (2018–2023)")
 
         @st.cache_data(show_spinner=False)
@@ -527,7 +527,7 @@ if st.session_state.hasil_clustering:
         else:
             st.info("Tidak ada variabel tahunan (2018–2023) untuk ditampilkan.")
 
-        # ================== METRIK (SETELAH TREN) ==================
+        # METRIK  
         col1, col2, col3 = st.columns(3)
         # tampilan metrik
         silh = result.get(metode_nama, {}).get("silhouette", None)
