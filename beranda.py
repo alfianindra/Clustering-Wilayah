@@ -14,8 +14,8 @@ load_custom_style()
 # === Judul Halaman ===
 st.markdown(
     """
-    <h2 style='text-align: center; color: white;'>Clustering Wilayah di Indonesia</h2>
-    <h4 style='text-align: center; color: white;'>Berdasarkan Status Gizi Penduduk</h4>
+    <h2 style='text-align: center;'>Clustering Wilayah di Indonesia</h2>
+    <h3 style='text-align: center;'>Berdasarkan Status Gizi Penduduk</h3>
     """,
     unsafe_allow_html=True
 )
