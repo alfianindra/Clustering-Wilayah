@@ -10,6 +10,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import seaborn as sns
 import matplotlib.pyplot as plt
+from sklearn.metrics import silhouette_samples, silhouette_score
+from matplotlib import cm
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import silhouette_score, davies_bouldin_score, silhouette_samples
 from utils import kmeans_manual, kmedian_manual, clara_manual
@@ -19,9 +21,7 @@ from style import load_custom_style
 import tempfile
 import os
 
-# ============================
-# KONFIGURASI HALAMAN
-# ============================
+# config halaman
 st.set_page_config(
     page_title="Clustering Wilayah di Indonesia",
     layout="wide",
@@ -45,15 +45,10 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# ============================
-# UNGGAH DATASET
-# ============================
 dataset = st.file_uploader("📂 Unggah Dataset", type=["xlsx", "csv"])
 st.markdown("---")
 
-# ============================
-# PARAMETER CLUSTER
-# ============================
+# Parameter cluster
 st.subheader("⚙️ Pilih Parameter Clustering")
 metode_opsi = [
     "K-Means",
@@ -69,9 +64,7 @@ st.markdown("---")
 if "hasil_clustering" not in st.session_state:
     st.session_state.hasil_clustering = None
 
-# ============================
-# VALIDASI KOLUMNYA
-# ============================
+# Validasi kolom
 def validasi_kolom(df):
     required_cols = ["Kabupaten", "Latitude", "Longitude"]
     for year in range(2018, 2024):
@@ -85,9 +78,7 @@ def validasi_kolom(df):
         return False
     return True
 
-# ============================
-# LEGEND UNTUK PETA
-# ============================
+# Legenda untuk peta
 def tentukan_legend_type(pilihan_variabel):
     tahun = "2018"
     variabel_utama = [
@@ -109,9 +100,7 @@ def tentukan_legend_type(pilihan_variabel):
     else:
         return "rendah_tinggi"
 
-# ============================
-# TAMPILKAN PETA FOLIUM
-# ============================
+# Tampilan peta folium
 def tampilkan_peta(df, cluster_col, k, numeric_cols, legend_mode, judul="Peta Hasil Clustering", metode_nama=""):
     if legend_mode == "auto":
         legend_mode = tentukan_legend_type(numeric_cols)
@@ -175,9 +164,7 @@ def tampilkan_peta(df, cluster_col, k, numeric_cols, legend_mode, judul="Peta Ha
     html(m.get_root().render(), height=720, width="100%")
     return m
 
-# ============================
-# FUNGSI SCREENSHOT PETA
-# ============================
+# convert peta ke png untuk di download
 def Peta_ke_png(m):
     tmp_dir = tempfile.mkdtemp()
     html_path = os.path.join(tmp_dir, "map_temp.html")
@@ -201,9 +188,7 @@ def Peta_ke_png(m):
         img_bytes = f.read()
     return img_bytes
 
-# ============================
 # PROSES DATASET
-# ============================
 if dataset is not None:
     try:
         df = pd.read_csv(dataset) if dataset.name.endswith(".csv") else pd.read_excel(dataset)
@@ -228,9 +213,7 @@ if dataset is not None:
                                       default=numeric_cols_all if pilih_semua else [])
     st.markdown("---")
 
-    # ============================
-    # 🔗 ANALISIS KORELASI
-    # ============================
+    # ANALISIS KORELASI
     if pilihan_variabel:
         st.subheader("🔗 Analisis Korelasi antar Variabel Terpilih")
 
@@ -240,24 +223,48 @@ if dataset is not None:
             )
 
             if len(tahun_ditemukan) == 1:
-                # Kalau hanya 1 tahun dipilih
                 tahun_target = tahun_ditemukan[0]
+            elif len(tahun_ditemukan) > 1:
+                tahun_target = st.selectbox(
+                    "Pilih tahun untuk ditampilkan pada heatmap:",
+                    tahun_ditemukan,
+                    index=0
+                )
             else:
-                # Kalau lebih dari 1 tahun atau semua tahun → tampilkan salah satu (2018)
-                tahun_target = "2018"
+                tahun_target = None
 
-            variabel_tahun = [v for v in pilihan_variabel if tahun_target in v]
+            if tahun_target:
+                variabel_tahun = [v for v in pilihan_variabel if tahun_target in v]
+            else:
+                variabel_tahun = pilihan_variabel  
 
             if not variabel_tahun:
-                st.info(f"Tidak ada variabel tahun {tahun_target} yang dipilih untuk analisis korelasi.")
+                st.info("Tidak ada variabel dengan tahun yang cocok untuk analisis korelasi.")
             else:
-                rename_map = {v: v.replace(f" {tahun_target}", "") for v in variabel_tahun}
+                rename_map = {
+                    v: v.replace(f" {tahun_target}", "") if tahun_target else v
+                    for v in variabel_tahun
+                }
                 df_tahun = df[variabel_tahun].rename(columns=rename_map)
 
                 corr = df_tahun.corr(method="pearson")
                 fig, ax = plt.subplots(figsize=(8, 5))
-                sns.heatmap(corr, annot=True, cmap="coolwarm", center=0, fmt=".2f", linewidths=0.5, ax=ax)
-                ax.set_title(f"Matriks Korelasi Variabel (Data Tahun {tahun_target})", fontsize=11, pad=10)
+                sns.heatmap(
+                    corr,
+                    annot=True,
+                    cmap="coolwarm",
+                    center=0,
+                    fmt=".2f",
+                    linewidths=0.5,
+                    ax=ax
+                )
+                ax.set_title(
+                    f"Matriks Korelasi Variabel (Data Tahun {tahun_target})"
+                    if tahun_target
+                    else "Matriks Korelasi Variabel (Tanpa Tahun)",
+                    fontsize=11,
+                    pad=10
+                )
                 plt.tight_layout()
                 st.pyplot(fig)
 
@@ -265,12 +272,13 @@ if dataset is not None:
                 fig.savefig(buf_corr, format="png", bbox_inches="tight")
                 buf_corr.seek(0)
                 st.download_button(
-                    label=f"📥 Download Heatmap Korelasi Tahun {tahun_target} (PNG)",
+                    label=f"📥 Download Heatmap Korelasi {f'Tahun {tahun_target}' if tahun_target else ''} (PNG)",
                     data=buf_corr,
-                    file_name=f"heatmap_korelasi_{tahun_target}.png",
+                    file_name=f"heatmap_korelasi_{tahun_target or 'all'}.png",
                     mime="image/png",
-                    key=f"download_corr_heatmap_{tahun_target}"
+                    key=f"download_corr_heatmap_{tahun_target or 'all'}"
                 )
+
         except Exception as e:
             st.warning(f"Tidak dapat menghitung korelasi: {e}")
 
@@ -375,7 +383,7 @@ if st.session_state.hasil_clustering:
             for col in numeric_cols:
                 fig, ax = plt.subplots(figsize=(3.8, 2.6))
                 try:
-                    sns.boxplot(x="Cluster", y=col, data=df, palette="coolwarm", ax=ax)
+                    sns.boxplot(x="Cluster", y=col, data=df, palette="tab10", ax=ax)
                 except Exception:
                     ax.boxplot([df[df["Cluster"] == c][col].dropna().values for c in sorted(df["Cluster"].unique())])
                     ax.set_xticklabels([f"Cluster {c}" for c in sorted(df["Cluster"].unique())])
@@ -433,8 +441,8 @@ if st.session_state.hasil_clustering:
         m = tampilkan_peta(df, "Cluster", jumlah_cluster, numeric_cols, "auto",
                            f"Peta Hasil Clustering ({metode_nama})", metode_nama)
 
-        # Download Peta (ambil screenshot)
-        if st.button(f"📷 Ambil & Download Screenshot Peta ({metode_nama}) (PNG)", key=f"download_map_btn_{metode_nama}"):
+        # Proses Peta
+        if st.button(f"Proses Peta ({metode_nama}) (PNG)", key=f"download_map_btn_{metode_nama}"):
             with st.spinner("📸 Sedang memproses peta, mohon tunggu..."):
                 try:
                     img_bytes = Peta_ke_png(m)
@@ -532,9 +540,9 @@ if st.session_state.hasil_clustering:
 
         if all_trends:
             st.markdown("#### 🔹 Visualisasi Tren per Variabel")
-            cols_trend_layout = st.columns(3)
+            cols_trend_layout = st.columns(2)
             for i, buf in enumerate(all_trends):
-                with cols_trend_layout[i % 3]:
+                with cols_trend_layout[i % 2]:
                     st.image(buf, use_container_width=True)
 
             st.download_button(
@@ -645,8 +653,6 @@ if st.session_state.hasil_clustering:
         st.markdown("### 📈 Silhouette Plot per Cluster")
 
         try:
-            from sklearn.metrics import silhouette_samples, silhouette_score
-            from matplotlib import cm
 
             data_matriks = df_scaled[numeric_cols].values
             label_cluster = labels
@@ -659,15 +665,17 @@ if st.session_state.hasil_clustering:
             y_bawah = 5
 
             fig, ax1 = plt.subplots(figsize=(5, 3.5))
-
-            for i in range(n_clusters):
+            colors = plt.get_cmap("tab10")(np.linspace(0, 1, 10))
+            unique_labels = sorted(np.unique(label_cluster))
+            color_map = {label: colors[i % 10] for i, label in enumerate(unique_labels)}
+            for i in unique_labels:
                 nilai_i = nilai_sample[label_cluster == i]
                 nilai_i.sort()
 
                 ukuran_i = nilai_i.shape[0]
                 y_atas = y_bawah + ukuran_i
 
-                warna = cm.nipy_spectral(float(i) / n_clusters)
+                warna = color_map[i]
                 ax1.fill_betweenx(
                     np.arange(y_bawah, y_atas),
                     0,
