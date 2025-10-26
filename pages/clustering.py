@@ -101,66 +101,56 @@ def tentukan_legend_type(pilihan_variabel):
         return "rendah_tinggi"
 
 # Tampilan peta folium
-def tampilkan_peta(df, cluster_col, k, numeric_cols, legend_mode, judul="Peta Hasil Clustering", metode_nama=""):
-    if legend_mode == "auto":
-        legend_mode = tentukan_legend_type(numeric_cols)
-
+def tampilkan_peta(df, cluster_col, k, numeric_cols, legend_mode,
+                   judul="Peta Hasil Clustering", metode_nama=""):
     st.write(f"### 🗺️ {judul}")
     colors = sns.color_palette("tab10", n_colors=k).as_hex()
     center_lat, center_lon = df["Latitude"].mean(), df["Longitude"].mean()
     m = folium.Map(location=[center_lat, center_lon], zoom_start=5.8, control_scale=True)
 
+    # Tambahkan marker sesuai cluster
     for _, row in df.iterrows():
         if not np.isfinite(row.get("Latitude", np.nan)) or not np.isfinite(row.get("Longitude", np.nan)):
             continue
+
         c = int(row[cluster_col])
         color = colors[c % len(colors)]
+
         folium.CircleMarker(
             location=[row["Latitude"], row["Longitude"]],
-            radius=6, color=color, fill=True, fill_color=color,
-            popup=folium.Popup(f"<b>{row.get('Kabupaten','-')}</b><br>Cluster {c}", max_width=250),
+            radius=6,
+            color=color,
+            fill=True,
+            fill_color=color,
+            popup=folium.Popup(
+                f"<b>{row.get('Kabupaten', '-')}</b><br>Cluster {c}",
+                max_width=250
+            ),
         ).add_to(m)
 
-    try:
-        m.fit_bounds(m.get_bounds())  
-    except Exception:
-        pass
-
-    if legend_mode == "gizi_buruk_baik":
-        gizi_dict = {
-            2: ["Gizi Buruk", "Gizi Baik"],
-            3: ["Sangat Buruk", "Buruk", "Baik"],
-            4: ["Sangat Buruk", "Buruk", "Baik", "Sangat Baik"],
-            5: ["Sangat Buruk", "Buruk", "Cukup", "Baik", "Sangat Baik"],
-            6: ["Sangat Buruk", "Buruk", "Kurang", "Cukup", "Baik", "Sangat Baik"],
-            7: ["Sangat Buruk", "Buruk", "Kurang", "Cukup", "Cukup Baik", "Baik", "Sangat Baik"]
-        }
-    else:
-        gizi_dict = {
-            2: ["Tinggi", "Rendah"],
-            3: ["Tinggi", "Sedang", "Rendah"],
-            4: ["Sangat Tinggi", "Tinggi", "Rendah", "Sangat Rendah"],
-            5: ["Sangat Tinggi", "Tinggi", "Sedang", "Rendah", "Sangat Rendah"],
-            6: ["Sangat Tinggi", "Tinggi", "Sedang", "Cukup Rendah", "Rendah", "Sangat Rendah"],
-            7: ["Sangat Tinggi", "Tinggi", "Cukup Tinggi", "Sedang", "Cukup Rendah", "Rendah", "Sangat Rendah"]
-        }
-
-    labels_for_k = gizi_dict.get(k, [f"Cluster {i}" for i in range(k)])
+    # Buat legend hanya dengan nomor cluster (tanpa keterangan tambahan)
     legend_items = "".join(
-        f"<div style='margin-bottom:5px'>"
-        f"<span style='display:inline-block;width:15px;height:15px;background-color:{colors[i]};"
-        f"border:1px solid #000;margin-right:6px;vertical-align:middle;'></span>"
-        f"<span style='vertical-align:middle;'>Cluster {i}: {labels_for_k[i]}</span></div>"
-        for i in range(k)
+        [
+            f"<i style='background:{colors[i]}; width:15px; height:15px; display:inline-block; "
+            f"margin-right:8px; border-radius:3px;'></i> Cluster {i}<br>"
+            for i in range(k)
+        ]
     )
 
     legend_html = f"""
-    <div style="position: fixed; bottom: 30px; left: 30px; width: 260px; background-color: white;
+    <div style="position: fixed; bottom: 30px; left: 30px; width: 180px; background-color: white;
     border:1px solid grey; border-radius:8px; z-index:9999; font-size:13px; padding: 10px;
     box-shadow: 2px 2px 6px rgba(0,0,0,0.25);">
-        <b>Keterangan Cluster</b><br> {legend_items}
-    </div>"""
+        <b>Keterangan Cluster</b><br>{legend_items}
+    </div>
+    """
     m.get_root().html.add_child(folium.Element(legend_html))
+
+    try:
+        m.fit_bounds(m.get_bounds())
+    except Exception:
+        pass
+
     html(m.get_root().render(), height=720, width="100%")
     return m
 
