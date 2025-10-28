@@ -432,25 +432,26 @@ if st.session_state.hasil_clustering:
                            f"Peta Hasil Clustering ({metode_nama})", metode_nama)
 
         # Proses Peta
-        if st.button(f"Proses Peta ({metode_nama}) (PNG)", key=f"download_map_btn_{metode_nama}"):
-            with st.spinner("📸 Sedang memproses peta, mohon tunggu..."):
+        if st.button(f"💾 Simpan Peta ({metode_nama})", key=f"save_map_btn_{metode_nama}"):
+            with st.spinner("💾 Sedang menyiapkan file peta, mohon tunggu..."):
                 try:
-                    img_bytes = Peta_ke_png(m)
-                    st.session_state[f"img_peta_{metode_nama}"] = img_bytes
-                    st.success("✅ Peta berhasil diproses! Sekarang Anda bisa mengunduhnya di bawah.")
+                    # Ambil representasi HTML dari objek folium
+                    html_data = m.get_root().render()
+                    st.session_state[f"html_peta_{metode_nama}"] = html_data.encode("utf-8")
+                    st.success("✅ Peta berhasil disiapkan untuk diunduh!")
                 except Exception as e:
-                    st.error(f"❌ Gagal mengambil screenshot peta: {e}")
-                    st.session_state.pop(f"img_peta_{metode_nama}", None)  # hapus cache jika gagal
+                    st.error(f"❌ Gagal menyimpan peta: {e}")
+                    st.session_state.pop(f"html_peta_{metode_nama}", None)
 
         # Tampilkan tombol download setelah selesai proses
-        if f"img_peta_{metode_nama}" in st.session_state:
+        if f"html_peta_{metode_nama}" in st.session_state:
             try:
                 st.download_button(
-                    label=f"⬇️ Unduh Peta ({metode_nama}) (PNG)",
-                    data=st.session_state[f"img_peta_{metode_nama}"],
-                    file_name=f"peta_{metode_nama.lower()}.png",
-                    mime="image/png",
-                    key=f"download_map_{metode_nama}"
+                    label=f"⬇️ Unduh Peta ({metode_nama}) (HTML)",
+                    data=st.session_state[f"html_peta_{metode_nama}"],
+                    file_name=f"peta_{metode_nama.lower()}.html",
+                    mime="text/html",
+                    key=f"download_html_map_{metode_nama}"
                 )
             except Exception as e:
                 st.error(f"⚠️ Gagal menyiapkan tombol unduh: {e}")
