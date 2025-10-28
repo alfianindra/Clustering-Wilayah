@@ -71,14 +71,14 @@ else:
     col2.warning("❌ Contoh_Data.xlsx tidak ditemukan.")
 
 # === Tombol 3: Buku Panduan ===
-panduan_file = template_path / "Buku_Panduan.pptx"
+panduan_file = template_path / "Buku_Panduan_program.pdf"
 if panduan_file.exists():
     with open(panduan_file, "rb") as f:
         col3.download_button(
             label="📗 Buku Panduan",
             data=f,
-            file_name="Buku_Panduan.pptx",
-            mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            file_name="Buku_Panduan_program.pdf",
+            mime="application/pdf"
         )
 else:
     col3.warning("❌ Buku_Panduan.pptx tidak ditemukan.")
