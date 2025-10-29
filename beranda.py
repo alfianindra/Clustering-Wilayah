@@ -20,6 +20,26 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# === Tujuan Website ===
+st.markdown(
+    """
+    <div style="text-align: center; margin-top: 10px; margin-bottom: 30px;">
+        <div class="card" style="display: inline-block; text-align: justify; max-width: 800px; padding: 20px;">
+            <div class="card-title" style="text-align: center;">Tujuan Website</div>
+            <div>
+                Website ini bertujuan untuk memvisualisasikan hasil pengelompokan (clustering) wilayah di Indonesia 
+                berdasarkan indikator status gizi penduduk. 
+                Melalui pendekatan ini, pengguna dapat memahami pola dan perbedaan tingkat gizi antar wilayah, 
+                serta mengidentifikasi daerah yang memerlukan perhatian lebih dalam peningkatan status gizi. 
+                Selain itu, website ini juga menjadi alat bantu analisis bagi peneliti, pembuat kebijakan, 
+                maupun masyarakat umum untuk melihat kondisi gizi secara interaktif dan informatif.
+            </div>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 st.write("")  # spasi
 
 # === Layout 2 atas dan 1 bawah ===
@@ -89,4 +109,3 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
