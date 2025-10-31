@@ -78,28 +78,6 @@ def validasi_kolom(df):
         return False
     return True
 
-# Legenda untuk peta
-def tentukan_legend_type(pilihan_variabel):
-    tahun = "2018"
-    variabel_utama = [
-        f"PoU {tahun}",
-        f"Jumlah_Penduduk {tahun}",
-        f"Penduduk_Undernourish {tahun}",
-        f"Persentase Penduduk Miskin (P0) {tahun}"
-    ]
-    terpilih_utama = [v for v in pilihan_variabel if v in variabel_utama]
-
-    if len(pilihan_variabel) == 1:
-        return "rendah_tinggi"
-    elif set(variabel_utama).issubset(set(pilihan_variabel)):
-        return "gizi_buruk_baik"
-    elif len(terpilih_utama) == 3:
-        return "rendah_tinggi"
-    elif len(terpilih_utama) == 2:
-        return "rendah_tinggi"
-    else:
-        return "rendah_tinggi"
-
 # Tampilan peta folium
 def tampilkan_peta(df, cluster_col, k, numeric_cols, legend_mode,
                    judul="Peta Hasil Clustering", metode_nama=""):
