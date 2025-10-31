@@ -5,7 +5,5 @@ folium
 seaborn
 matplotlib
 scikit-learn
-chromedriver-autoinstaller
-selenium
 Pillow
 openpyxl

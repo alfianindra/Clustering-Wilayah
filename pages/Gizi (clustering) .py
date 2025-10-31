@@ -5,9 +5,6 @@ import time
 import folium
 from streamlit.components.v1 import html
 from PIL import Image
-import chromedriver_autoinstaller
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.metrics import silhouette_samples, silhouette_score
@@ -106,7 +103,7 @@ def tampilkan_peta(df, cluster_col, k, numeric_cols, legend_mode,
             ),
         ).add_to(m)
 
-    # Buat legend hanya dengan nomor cluster (tanpa keterangan tambahan)
+    # Legend Peta
     legend_items = "".join(
         [
             f"<i style='background:{colors[i]}; width:15px; height:15px; display:inline-block; "
@@ -131,30 +128,6 @@ def tampilkan_peta(df, cluster_col, k, numeric_cols, legend_mode,
 
     html(m.get_root().render(), height=720, width="100%")
     return m
-
-# convert peta ke png untuk di download
-def Peta_ke_png(m):
-    tmp_dir = tempfile.mkdtemp()
-    html_path = os.path.join(tmp_dir, "map_temp.html")
-    png_path = os.path.join(tmp_dir, "map_screenshot.png")
-    m.save(html_path)
-
-    chromedriver_autoinstaller.install()
-    chrome_options = Options()
-    chrome_options.add_argument("--headless=new")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--window-size=2560,1440")
-
-    driver = webdriver.Chrome(options=chrome_options)
-    driver.get("file://" + html_path)
-    time.sleep(3)
-    driver.save_screenshot(png_path)
-    driver.quit()
-
-    with open(png_path, "rb") as f:
-        img_bytes = f.read()
-    return img_bytes
 
 # PROSES DATASET
 if dataset is not None:
