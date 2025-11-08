@@ -245,34 +245,49 @@ if dataset is not None:
         df_scaled = df.copy()
         df_scaled[pilihan_variabel] = scaler.fit_transform(df[pilihan_variabel])
 
+        # Tambahkan noise kecil agar tidak 100% identik
+        df_scaled[pilihan_variabel] += np.random.normal(0, 1e-6, df_scaled[pilihan_variabel].shape)
+
         start = time.time()
         result = {}
+
+        def safe_metrics(data, labels):
+            """Cegah error jika hanya 1 cluster"""
+            unik = np.unique(labels)
+            if len(unik) < 2:
+                st.warning("⚠️ Data terlalu homogen — hanya terbentuk 1 cluster nyata. Silhouette & DBI tidak dihitung.")
+                return np.nan, np.nan
+            else:
+                return silhouette_score(data, labels), davies_bouldin_score(data, labels)
 
         # Jika Metode yang dipilih terdapat elemen K-Means
         if metode in ["K-Means", "K-Means dan K-Median", "K-Means dan K-Median dan CLARA"]:
             labels_kmeans, _ = kmeans_manual(df_scaled[pilihan_variabel], jumlah_cluster)
+            silh, dbi = safe_metrics(df_scaled[pilihan_variabel], labels_kmeans)
             result["K-Means"] = {
                 "labels": labels_kmeans,
-                "silhouette": silhouette_score(df_scaled[pilihan_variabel], labels_kmeans),
-                "dbi": davies_bouldin_score(df_scaled[pilihan_variabel], labels_kmeans)
+                "silhouette": silh,
+                "dbi": dbi
             }
 
         # Jika Metode yang dipilih terdapat elemen K-Median 
         if metode in ["K-Median", "K-Means dan K-Median", "K-Means dan K-Median dan CLARA"]:
             labels_kmedian, _ = kmedian_manual(df_scaled[pilihan_variabel], jumlah_cluster)
+            silh, dbi = safe_metrics(df_scaled[pilihan_variabel], labels_kmedian)
             result["K-Median"] = {
                 "labels": labels_kmedian,
-                "silhouette": silhouette_score(df_scaled[pilihan_variabel], labels_kmedian),
-                "dbi": davies_bouldin_score(df_scaled[pilihan_variabel], labels_kmedian)
+                "silhouette": silh,
+                "dbi": dbi
             }
 
         # Jika Metode yang dipilih terdapat elemen CLARA 
         if metode in ["CLARA", "K-Means dan K-Median dan CLARA"]:
             labels_clara, _ = clara_manual(df_scaled[pilihan_variabel], jumlah_cluster)
+            silh, dbi = safe_metrics(df_scaled[pilihan_variabel], labels_clara)
             result["CLARA"] = {
                 "labels": labels_clara,
-                "silhouette": silhouette_score(df_scaled[pilihan_variabel], labels_clara),
-                "dbi": davies_bouldin_score(df_scaled[pilihan_variabel], labels_clara)
+                "silhouette": silh,
+                "dbi": dbi
             }
 
         result["waktu"] = time.time() - start
