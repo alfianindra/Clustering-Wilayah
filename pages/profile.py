@@ -121,3 +121,18 @@ with col2:
             </div>
         </div>
     """, unsafe_allow_html=True)
+# === Kotak kontak di bawah tengah ===
+st.markdown("""
+    <div style="display: flex; justify-content: center; margin-top: 25px;">
+        <div class="card" style="width: 60%; text-align: center;">
+            <div class="card-title">📞 Kontak</div>
+            <div>
+                Jika Anda memiliki pertanyaan, saran, atau ingin berdiskusi lebih lanjut mengenai proyek ini, 
+                Anda dapat menghubungi saya melalui kontak berikut:
+                <br><br>
+                📧 <b>Email:</b> <a href="mailto:alfianij8@gmail.com" style="color:#4da6ff;">alfianindrajaya@gmail.com</a><br>
+                🧑‍💻 <b>GitHub:</b> <a href="https://github.com/alfianindra" target="_blank" style="color:#4da6ff;">github.com/alfianindrajaya</a>
+            </div>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
