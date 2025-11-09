@@ -206,9 +206,12 @@ if dataset is not None:
                     fontsize=11,
                     pad=10
                 )
-                plt.tight_layout()
-                st.pyplot(fig)
-
+                plt.tight_layout(pad=0.5)
+                fig.subplots_adjust(left=0.2, right=0.9, top=0.9, bottom=0.25)
+                col1, col2, col3 = st.columns([1, 2, 1])
+                with col2:
+                    st.pyplot(fig, use_container_width=False)
+                
                 buf_corr = BytesIO()
                 fig.savefig(buf_corr, format="png", bbox_inches="tight")
                 buf_corr.seek(0)
