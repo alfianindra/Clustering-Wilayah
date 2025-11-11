@@ -56,6 +56,8 @@ metode_opsi = [
 ]
 metode = st.selectbox("Metode Clustering", metode_opsi, index=None, placeholder="Pilih metode")
 jumlah_cluster = st.selectbox("Jumlah Cluster (k)", [2, 3, 4, 5, 6, 7], index=None, placeholder="Pilih jumlah cluster")
+st.info("💡 **Rekomendasi Jumlah Cluster** Berdasarkan analisis awal, jumlah cluster yang disarankan adalah **2**.")
+
 st.markdown("---")
 
 if "hasil_clustering" not in st.session_state:
