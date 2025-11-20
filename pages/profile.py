@@ -152,7 +152,7 @@ st.markdown("""
                 Jika Anda memiliki pertanyaan, saran, atau ingin berdiskusi lebih lanjut mengenai proyek ini, 
                 Anda dapat menghubungi saya melalui kontak berikut:
                 <br><br>
-                📧 <b>Email:</b> <a href="mailto:alfianij8@gmail.com" style="color:#4da6ff;">alfianindrajaya@gmail.com</a><br>
+                📧 <b>Email:</b> <a href="mailto:alfianij8@gmail.com" style="color:#4da6ff;">alfianij8@gmail.com</a><br>
                 🧑‍💻 <b>GitHub:</b> <a href="https://github.com/alfianindra" target="_blank" style="color:#4da6ff;">github.com/alfianindrajaya</a>
             </div>
         </div>

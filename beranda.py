@@ -9,10 +9,8 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# === Load CSS Global ===
 load_custom_style()
 
-# === Judul Halaman ===
 st.markdown(
     """
     <h1 style='text-align: center; margin-bottom: 0;'>🌏 Clustering Wilayah di Indonesia</h1>
@@ -21,7 +19,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# === Tujuan Website ===
 st.markdown(
     """
     <div style="display: flex; justify-content: center; margin-top: 30px; margin-bottom: 40px;">
@@ -41,7 +38,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# === Layout 2 atas dan 1 bawah ===
 st.markdown("<hr style='margin-top:10px;margin-bottom:30px;'>", unsafe_allow_html=True)
 col1, col2 = st.columns(2, gap="large")
 
@@ -96,7 +92,6 @@ with col4:
         </div>
     """, unsafe_allow_html=True)
 
-# === CLARA Section + Buku Panduan Button ===
 st.markdown(
     """
     <div style="display: flex; flex-direction: column; align-items: center; margin-top: 40px;">

@@ -35,16 +35,15 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# === Bagian Tombol Download ===
+
 st.markdown("### 📥 Unduh Template & Panduan")
 
-# Buat 3 kolom sejajar
+
 col1, col2, col3 = st.columns(3)
 
-# Path folder template
+
 template_path = Path("template")
 
-# === Tombol 1: Template Dataset ===
 template_file = template_path / "Template_Dataset.xlsx"
 if template_file.exists():
     with open(template_file, "rb") as f:
@@ -57,7 +56,6 @@ if template_file.exists():
 else:
     col1.warning("❌ Template_Dataset.xlsx tidak ditemukan.")
 
-# === Tombol 2: Contoh Data ===
 contoh_file = template_path / "Contoh_Data.xlsx"
 if contoh_file.exists():
     with open(contoh_file, "rb") as f:
@@ -70,7 +68,7 @@ if contoh_file.exists():
 else:
     col2.warning("❌ Contoh_Data.xlsx tidak ditemukan.")
 
-# === Tombol 3: Buku Panduan ===
+
 panduan_file = template_path / "Buku_panduan_program.pdf"
 if panduan_file.exists():
     with open(panduan_file, "rb") as f:
