@@ -10,16 +10,13 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# === Load CSS utama ===
+
 load_custom_style()
 
-# === Judul halaman ===
 st.markdown("<h1 style='text-align: center;'>PROFILE</h1>", unsafe_allow_html=True)
 
-# === Path gambar profil ===
 image_path = Path("image/Profile.jpg")
 
-# === Styling tambahan ===
 st.markdown("""
     <style>
     .profile-container {
@@ -75,6 +72,16 @@ st.markdown("""
         color: #4da6ff;
         text-align: center;
     }
+
+    .usage-section {
+        background-color: #1f1f1f;
+        padding: 25px;
+        margin-top: 35px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        color: white;
+    }
+
     </style>
 """, unsafe_allow_html=True)
 
@@ -96,7 +103,7 @@ if image_path.exists():
 else:
     st.warning("⚠️ Gambar profil tidak ditemukan di folder 'image/'. Pastikan nama filenya 'Profile.jpg'.")
 
-# === Dua card menyamping (Hobi & Latar Belakang) ===
+
 col1, col2 = st.columns(2)
 
 with col1:
@@ -121,7 +128,22 @@ with col2:
             </div>
         </div>
     """, unsafe_allow_html=True)
-# === Kotak kontak di bawah tengah ===
+
+st.markdown("""
+    <div class="usage-section">
+        <h2 style="text-align:center; color:#4da6ff;">🧭 Cara Penggunaan Website</h2>
+        <p>
+            Halaman website ini dirancang untuk membantu Anda menjelajahi hasil analisis clustering wilayah di Indonesia berdasarkan status gizi penduduk. Berikut cara penggunaannya:
+        </p>
+        <ul>
+            <li><b>📁 Download Buku Panduan dan dataset:</b> Pada halaman dataset.</li>
+            <li><b>🔍 Eksplorasi Hasil</b> didapatkan ketika sudah mengunggah dataset, memilih metode K-Means, K-Median atau CLARA dan memilih jumlah cluster K lalu tekan tombol lakukan clustering.</li>
+            <li><b>🔎 Hasil Clustering:</b> hasilnya berupa boxplot, peta, tren 10 wilayah teratas berdasarkan dataset,dan metrik evaluasi metode yang dipilih.</li>
+            <li><b>📥 Download Output:</b> Jika tersedia, user dapat mengunduh hasil analisis dalam format CSV,PNG dan HTML.</li>
+        </ul>
+    </div>
+""", unsafe_allow_html=True)
+
 st.markdown("""
     <div style="display: flex; justify-content: center; margin-top: 25px;">
         <div class="card" style="width: 60%; text-align: center;">
